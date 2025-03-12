@@ -1,0 +1,311 @@
+/* Page Styles */
+.page {
+  position: relative;
+  font-family: Arial, sans-serif;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  padding: 20px;
+}
+
+/* Main Container */
+.container {
+  max-width: 1100px;
+  margin: 80px auto 20px;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Title */
+.title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+/* Loading and Status Text */
+.text-center {
+  text-align: center;
+}
+.text-gray {
+  color: #999;
+}
+
+/* Loader Animation */
+.loader {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-top-color: #333;
+  border-radius: 50%;
+  animation: spin 1s infinite linear;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Subscription List */
+.subscription-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Each Row (header or data) */
+.subscription-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #ddd;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.subscription-row:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Plan ID column */
+.subscription-id {
+  font-size: 1rem;
+  color: #333;
+  font-weight: 500;
+  flex: 1;
+}
+
+/* Plan Name column */
+.subscription-name {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #333;
+  flex: 2;
+}
+
+/* Price, Duration columns */
+.subscription-price,
+.subscription-duration {
+  font-size: 1rem;
+  color: #666;
+  flex: 1;
+  text-align: center;
+}
+
+/* Subscribe Button */
+.subscribe-button {
+  background-color: #28a745;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+.subscribe-button:hover {
+  background-color: #218838;
+}
+.subscribe-button:disabled {
+  background-color: #aaa;
+  color: #eee;
+  cursor: not-allowed;
+}
+
+/* Create New Subscription Section */
+.create-section {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.create-button {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+.create-button:hover {
+  background-color: #0056b3;
+}
+
+/* Form for Creating a Plan */
+.create-form {
+  margin-top: 20px;
+  text-align: left;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.form-group {
+  margin-bottom: 10px;
+}
+.form-group input {
+  width: 100%;
+  padding: 8px;
+  font-size: 0.95rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+.form-group input:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+/* Form Buttons */
+.form-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+.create-submit-button {
+  background-color: #28a745;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+.create-submit-button:hover {
+  background-color: #218838;
+}
+.cancel-button {
+  background-color: #dc3545;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+.cancel-button:hover {
+  background-color: #c82333;
+}
+
+/* Table-like header columns */
+.subscription-header {
+  font-weight: bold;
+}
+
+.subscription-status {
+  flex: 2;
+}
+
+.subscription-auto-renew {
+  display: flex;
+  justify-content: center;
+}
+
+.subscription-cancel {
+  min-width: 80px;
+  text-align: center;
+}
+
+/* Button used for renewing immediately if expired + autoRenew */
+.renew-button {
+  margin-left: 8px;
+  background-color: #007bff;
+  color: #fff;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+.renew-button:hover {
+  background-color: #0056b3;
+}
+
+/* Cancel subscription button */
+.cancel-sub-button {
+  background-color: #dc3545;
+  color: #fff;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  margin-left: 10px;
+  transition: background-color 0.3s ease;
+}
+.cancel-sub-button:hover {
+  background-color: #c82333;
+}
+.cancel-sub-button:disabled {
+  background-color: #aaa;
+  cursor: not-allowed;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  position: relative;
+  width: 50px;
+  height: 24px;
+  margin-right: 10px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.toggle-switch label {
+  position: absolute;
+  top: 0;
+  left: 0; 
+  right: 0; 
+  bottom: 0;
+  background-color: #ccc;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.toggle-switch label::before {
+  content: "";
+  position: absolute;
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  background-color: #fff;
+  left: 3px;
+  top: 3px;
+  transition: transform 0.3s;
+}
+
+.toggle-switch input:checked + label {
+  background-color: #28a745;
+}
+
+.toggle-switch input:checked + label::before {
+  transform: translateX(26px);
+}
+
+.toggle-switch input:disabled + label {
+  cursor: not-allowed;
+  background-color: #ddd;
+}
+
+.toggle-switch input:disabled + label::before {
+  background-color: #bbb;
+}

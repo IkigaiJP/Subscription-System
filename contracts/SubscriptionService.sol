@@ -1,170 +1,235 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.28;
+pragma solidity ^0.8.26;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract SubscriptionService {
-    struct Subscription {
+    struct SubscriptionPlan {
+        address creator;
+        string name;
         uint256 price;
-        uint256 duration;
+        uint256 duration; // in days
     }
 
     struct UserSubscription {
         uint256 expiry;
-        string level;
+        bool autoRenewal;
+        bool hasUsedTrial;
     }
 
-    IERC20 public usdc;
-    mapping(address => mapping(string => Subscription)) public subscriptions;
-    mapping(address => mapping(address => UserSubscription))
+    IERC20 public immutable usdc;
+    uint256 private subscriptionCounter;
+
+    // planId -> SubscriptionPlan
+    mapping(uint256 => SubscriptionPlan) public subscriptionPlans;
+
+    // creator -> created plan IDs
+    mapping(address => uint256[]) private subscriptionsByCreator;
+
+    // user -> planId -> UserSubscription
+    mapping(address => mapping(uint256 => UserSubscription))
         public userSubscriptions;
-    mapping(address => uint256) public balances;
-    mapping(address => mapping(address => bool)) public autoRenewal;
-    mapping(address => mapping(address => bool)) public hasUsedTrial;
+
+    // user -> array of all planIds ever subscribed to
+    mapping(address => uint256[]) private userPlanIds;
+
+    // creator -> balance
+    mapping(address => uint256) private creatorBalances;
 
     event SubscriptionCreated(
         address indexed creator,
-        string level,
+        uint256 indexed planId,
+        string name,
         uint256 price,
         uint256 duration
     );
     event Subscribed(
         address indexed user,
-        address indexed creator,
-        string level,
+        uint256 indexed planId,
         uint256 expiry
     );
     event Withdrawn(address indexed creator, uint256 amount);
-    event SubscriptionCanceled(address indexed user, address indexed creator);
+    event SubscriptionCanceled(address indexed user, uint256 indexed planId);
     event TrialStarted(
         address indexed user,
-        address indexed creator,
+        uint256 indexed planId,
         uint256 expiry
+    );
+    event AutoRenewalUpdated(
+        address indexed user,
+        uint256 indexed planId,
+        bool enabled
     );
 
     constructor(address _usdc) {
+        require(_usdc != address(0), "Invalid USDC address");
         usdc = IERC20(_usdc);
     }
 
-    /// @notice Creates a new subscription level
-    function createSubscription(
-        string memory level,
+    function createSubscriptionPlan(
+        string calldata name,
         uint256 price,
         uint256 duration
     ) external {
-        require(price > 0, "Price must be greater than zero");
-        require(duration > 0, "Duration must be greater than zero");
+        require(bytes(name).length > 0, "Name required");
+        require(price > 0, "Price > 0");
+        require(duration > 0, "Duration > 0");
 
-        subscriptions[msg.sender][level] = Subscription({
+        uint256 newId = ++subscriptionCounter;
+        subscriptionPlans[newId] = SubscriptionPlan({
+            creator: msg.sender,
+            name: name,
             price: price,
             duration: duration
         });
 
-        emit SubscriptionCreated(msg.sender, level, price, duration);
+        subscriptionsByCreator[msg.sender].push(newId);
+
+        emit SubscriptionCreated(msg.sender, newId, name, price, duration);
     }
 
-    /// @notice Subscribe to a creator's plan
-    function subscribe(address creator, string memory level) external {
-        Subscription storage sub = subscriptions[creator][level];
-        require(sub.price > 0, "Subscription does not exist");
+    function subscribeToPlan(uint256 planId) external {
+        SubscriptionPlan storage plan = subscriptionPlans[planId];
+        require(plan.price > 0, "Plan does not exist");
+
         require(
-            usdc.transferFrom(msg.sender, address(this), sub.price),
+            usdc.transferFrom(msg.sender, address(this), plan.price),
             "Payment failed"
         );
+        creatorBalances[plan.creator] += plan.price;
 
-        userSubscriptions[msg.sender][creator] = UserSubscription({
-            expiry: block.timestamp + sub.duration,
-            level: level
-        });
+        UserSubscription storage userSub = userSubscriptions[msg.sender][
+            planId
+        ];
+        // If expiry == 0, it means there has never been a subscription before
+        bool isFirstTime = (userSub.expiry == 0);
 
-        balances[creator] += sub.price;
+        // Extending the subscription
+        userSub.expiry = block.timestamp + (plan.duration * 1 days);
+        userSub.autoRenewal = false;
 
-        emit Subscribed(
-            msg.sender,
-            creator,
-            level,
-            userSubscriptions[msg.sender][creator].expiry
-        );
+        // Push planId only if subscribing for the first time
+        if (isFirstTime) {
+            userPlanIds[msg.sender].push(planId);
+        }
+
+        emit Subscribed(msg.sender, planId, userSub.expiry);
     }
 
-    /// @notice Enables automatic subscription renewal
-    function enableAutoRenew(address creator) external {
+    function enableAutoRenewal(uint256 planId) external {
+        UserSubscription storage userSub = userSubscriptions[msg.sender][
+            planId
+        ];
+        require(userSub.expiry > block.timestamp, "Inactive subscription");
+
+        userSub.autoRenewal = true;
+        emit AutoRenewalUpdated(msg.sender, planId, true);
+    }
+
+    function disableAutoRenewal(uint256 planId) external {
+        UserSubscription storage userSub = userSubscriptions[msg.sender][
+            planId
+        ];
+        userSub.autoRenewal = false;
+        emit AutoRenewalUpdated(msg.sender, planId, false);
+    }
+
+    function renewUserSubscription(uint256 planId) external {
+        SubscriptionPlan storage plan = subscriptionPlans[planId];
+        require(plan.price > 0, "Plan does not exist");
+
+        UserSubscription storage userSub = userSubscriptions[msg.sender][
+            planId
+        ];
+        require(userSub.autoRenewal, "Auto-renewal off");
+        require(block.timestamp >= userSub.expiry, "Not expired");
+
         require(
-            userSubscriptions[msg.sender][creator].expiry > block.timestamp,
-            "Subscription inactive"
-        );
-        autoRenewal[msg.sender][creator] = true;
-    }
-
-    function disableAutoRenew(address creator) external {
-        autoRenewal[msg.sender][creator] = false;
-    }
-
-    function renewSubscription(address user, address creator) external {
-        require(autoRenewal[user][creator], "Auto-renewal not enabled");
-
-        UserSubscription storage sub = userSubscriptions[user][creator];
-        Subscription storage plan = subscriptions[creator][sub.level];
-
-        require(plan.price > 0, "Subscription does not exist");
-        require(
-            usdc.transferFrom(user, address(this), plan.price),
+            usdc.transferFrom(msg.sender, address(this), plan.price),
             "Payment failed"
         );
+        creatorBalances[plan.creator] += plan.price;
 
-        sub.expiry += plan.duration;
+        userSub.expiry = block.timestamp + (plan.duration * 1 days);
     }
 
-    /// @notice Allows creators to withdraw their earnings
-    function withdraw() external {
-        uint256 balance = balances[msg.sender];
-        require(balance > 0, "No funds to withdraw");
-        balances[msg.sender] = 0;
-        require(usdc.transfer(msg.sender, balance), "Withdrawal failed");
+    function cancelUserSubscription(uint256 planId) external {
+        SubscriptionPlan storage plan = subscriptionPlans[planId];
+        require(plan.price > 0, "Plan does not exist");
+
+        UserSubscription storage userSub = userSubscriptions[msg.sender][
+            planId
+        ];
+        require(block.timestamp < userSub.expiry, "Already expired");
+
+        uint256 remainingTime = userSub.expiry - block.timestamp;
+        uint256 totalTime = plan.duration * 1 days;
+        uint256 refundAmount = (remainingTime * plan.price) / totalTime;
+
+        userSub.expiry = block.timestamp;
+
+        if (refundAmount > 0 && creatorBalances[plan.creator] >= refundAmount) {
+            creatorBalances[plan.creator] -= refundAmount;
+            require(usdc.transfer(msg.sender, refundAmount), "Refund failed");
+        }
+
+        emit SubscriptionCanceled(msg.sender, planId);
+    }
+
+    function withdrawEarnings() external {
+        uint256 balance = creatorBalances[msg.sender];
+        require(balance > 0, "No funds");
+
+        creatorBalances[msg.sender] = 0;
+        require(usdc.transfer(msg.sender, balance), "Withdraw failed");
+
         emit Withdrawn(msg.sender, balance);
     }
 
-    /// @notice Allows users to cancel their subscription
-    function cancelSubscription(address creator) external {
-        require(
-            userSubscriptions[msg.sender][creator].expiry > block.timestamp,
-            "Subscription not active"
-        );
-        userSubscriptions[msg.sender][creator].expiry = block.timestamp;
-        emit SubscriptionCanceled(msg.sender, creator);
-    }
-
-    /// @notice Checks if a user has an active subscription
-    function isSubscribed(
-        address user,
-        address creator
-    ) external view returns (bool) {
-        return block.timestamp < userSubscriptions[user][creator].expiry;
-    }
-
-    /// @notice Returns the remaining time for a user's subscription
-    function getRemainingTime(
-        address user,
+    function getCreatorBalance(
         address creator
     ) external view returns (uint256) {
-        if (block.timestamp >= userSubscriptions[user][creator].expiry) {
-            return 0;
-        }
-        return userSubscriptions[user][creator].expiry - block.timestamp;
+        return creatorBalances[creator];
     }
 
-    /// @notice Starts a free trial for a user
-    function startTrial(address creator, uint256 trialDuration) external {
-        require(!hasUsedTrial[msg.sender][creator], "Trial already used");
-        userSubscriptions[msg.sender][creator] = UserSubscription({
-            expiry: block.timestamp + trialDuration,
-            level: "trial"
-        });
-        hasUsedTrial[msg.sender][creator] = true;
-        emit TrialStarted(
-            msg.sender,
-            creator,
-            userSubscriptions[msg.sender][creator].expiry
+    function hasActiveSubscription(
+        address user,
+        uint256 planId
+    ) public view returns (bool) {
+        return userSubscriptions[user][planId].expiry > block.timestamp;
+    }
+
+    function getCreatorSubscriptions(
+        address user
+    ) external view returns (uint256[] memory) {
+        return subscriptionsByCreator[user];
+    }
+
+    function getAllSubscriptionPlans()
+        external
+        view
+        returns (SubscriptionPlan[] memory)
+    {
+        SubscriptionPlan[] memory allPlans = new SubscriptionPlan[](
+            subscriptionCounter
         );
+        for (uint256 i = 1; i <= subscriptionCounter; i++) {
+            allPlans[i - 1] = subscriptionPlans[i];
+        }
+        return allPlans;
+    }
+
+    // Returns all plan IDs user has ever subscribed to (including expired)
+    function getUserSubscribedPlans(
+        address user
+    ) external view returns (uint256[] memory) {
+        return userPlanIds[user];
+    }
+
+    function getUserSubscription(
+        address user,
+        uint256 planId
+    ) external view returns (UserSubscription memory) {
+        return userSubscriptions[user][planId];
     }
 }

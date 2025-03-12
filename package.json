@@ -1,7 +1,27 @@
 {
+  "name": "subscription-system",
+  "version": "1.0.0",
+  "description": "",
+  "main": "hardhat.config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IkigaiJP/Subscription-System.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/IkigaiJP/Subscription-System/issues"
+  },
+  "homepage": "https://github.com/IkigaiJP/Subscription-System#readme",
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
-    "flatten": "^1.0.3",
     "hardhat": "^2.22.19"
   },
   "dependencies": {

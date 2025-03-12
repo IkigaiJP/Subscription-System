@@ -1,0 +1,90 @@
+/* Top-right button and wallet address */
+.top-right {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+  }
+  
+  .button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .button:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  .button:active {
+    background-color: #004085;
+    transform: translateY(0);
+    box-shadow: none;
+  }
+  
+  .wallet-address {
+    font-size: 0.9rem;
+    color: #4caf50;
+    font-weight: bold;
+    background-color: #f0f0f0;
+    padding: 5px 10px;
+    border-radius: 5px;
+  }
+  
+/* General style for buttons */
+.button {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.button:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+.button:active {
+  background-color: #004085;
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* Wallet address */
+.wallet-address {
+  font-size: 0.9rem;
+  color: #4caf50;
+  font-weight: bold;
+  background-color: #f0f0f0;
+  padding: 5px 10px;
+  border-radius: 5px;
+  margin-bottom: 5px;
+  display: inline-block;
+}
+
+/* Styles for balances */
+.wallet-balance {
+  display: inline-block;
+  margin: 5px 0;
+  font-weight: 500;
+  color: #333;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  padding: 4px 8px;
+  margin-right: 6px;
+}

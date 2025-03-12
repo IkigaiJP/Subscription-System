@@ -1,7 +1,12 @@
+require("dotenv").config();
 const hre = require("hardhat");
 
 async function main() {
-  const USDC_ADDRESS = "0xe533D647bd4B562AdD5EcAe66BC10546b02229c5";
+  const USDC_ADDRESS = process.env.USDC_ADDRESS;
+
+  if (!USDC_ADDRESS) {
+    throw new Error("USDC_ADDRESS is not set in .env file");
+  }
 
   const SubscriptionService = await hre.ethers.getContractFactory("SubscriptionService");
   const contract = await SubscriptionService.deploy(USDC_ADDRESS);
